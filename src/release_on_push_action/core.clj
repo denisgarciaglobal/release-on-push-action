@@ -1,17 +1,17 @@
 (ns release-on-push-action.core
-    (:require [babashka.curl :as curl]
-              [cheshire.core :as json]
-              [clojure.string :as str]
-              [clojure.java.io]
+  (:require [babashka.curl :as curl]
+            [cheshire.core :as json]
+            [clojure.string :as str]
+            [clojure.java.io]
 
-              [release-on-push-action.github :as github]))
+            [release-on-push-action.github :as github]))
 
 ;; -- Configuration Parsing  ---------------------------------------------------
 (defn getenv-or-throw [name]
   (let [val (System/getenv name)]
     (when (empty? val)
-          (throw (ex-info (str "Expected environment variable to be set: " name)
-                          {:env/name name})))
+      (throw (ex-info (str "Expected environment variable to be set: " name)
+                      {:env/name name})))
     val))
 
 (defn input-strategy-set? []
@@ -23,7 +23,7 @@
 
 (defn assert-valid-bump-version-scheme [bump-version-scheme]
   (when-not (contains? #{"major" "minor" "patch" "norelease"} bump-version-scheme)
-            (throw (ex-info (str "Invalid bump-version-scheme. Expected one of major|minor|patch|norelease. Got: " bump-version-scheme) {:bump-version-scheme bump-version-scheme})))
+    (throw (ex-info (str "Invalid bump-version-scheme. Expected one of major|minor|patch|norelease. Got: " bump-version-scheme) {:bump-version-scheme bump-version-scheme})))
   bump-version-scheme)
 
 (defn context-from-env
@@ -58,10 +58,10 @@
 (defn bump-version-scheme [context related-data]
   (let [labels (get-labels (:related-prs related-data))]
     (cond
-     (contains? labels "release:major") :major
-     (contains? labels "release:minor") :minor
-     (contains? labels "release:patch") :patch
-     :else (keyword (:bump-version-scheme context)))))
+      (contains? labels "release:major") :major
+      (contains? labels "release:minor") :minor
+      (contains? labels "release:patch") :patch
+      :else (keyword (:bump-version-scheme context)))))
 
 (defn get-tagged-version [latest-release]
   (let [tag      (get latest-release :tag_name "0.0.0")
@@ -74,21 +74,21 @@
 (defn semver-bump [version bump]
   (let [[major minor patch] (map #(Integer/parseInt %) (str/split version #"\."))
         next-version (condp = bump
-                            :major [(safe-inc major) 0 0]
-                            :minor [major (safe-inc minor) 0]
-                            :patch [major minor (safe-inc patch)])]
+                       :major [(safe-inc major) 0 0]
+                       :minor [major (safe-inc minor) 0]
+                       :patch [major minor (safe-inc patch)])]
     (str/join "." next-version)))
 
 (defn norelease-reason [context related-data]
   (cond
-   (= :norelease (bump-version-scheme context related-data))
-   "Skipping release, no version bump found."
+    (= :norelease (bump-version-scheme context related-data))
+    "Skipping release, no version bump found."
 
-   (str/includes? (github/commit-title (:commit related-data)) "[norelease]")
-   "Skipping release. Reason: git commit title contains [norelease]"
+    (str/includes? (github/commit-title (:commit related-data)) "[norelease]")
+    "Skipping release. Reason: git commit title contains [norelease]"
 
-   (contains? (get-labels (get-in related-data [:related-prs])) "norelease")
-   "Skipping release. Reason: related PR has label norelease"))
+    (contains? (get-labels (get-in related-data [:related-prs])) "norelease")
+    "Skipping release. Reason: related PR has label norelease"))
 
 ;; Note: at 500, I suspect this list will be unproductive to view
 (defn max-commits-to-summarize [max-commits]
@@ -109,11 +109,11 @@
      :target_commitish (:sha context)
      :name             (str (:input/tag-prefix context) next-version)
      :body             (with-out-str
-                        (printf "Version %s\n\n" next-version)
-                        (when-let [body (:input/release-body context)]
-                          (println body))
-                        (printf "### Commits\n\n")
-                        (println summary-since-last-release))
+                         (printf "Version %s\n\n" next-version)
+                         (when-let [body (:input/release-body context)]
+                           (println body))
+                         (printf "### Commits\n\n")
+                         (println summary-since-last-release))
      :draft            false
      :prerelease       false}))
 
