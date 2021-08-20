@@ -92,7 +92,6 @@
 
 ;; Note: at 500, I suspect this list will be unproductive to view
 (defn max-commits-to-summarize [max-commits]
-  "This is the maximum number of commits to summarize."
   max-commits)
 
 (defn generate-new-release-data [context related-data]
