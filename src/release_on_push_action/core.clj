@@ -42,9 +42,7 @@
                              (if (input-strategy-set?)
                                (getenv-or-throw "INPUT_STRATEGY")
                                (throw ex)))))
-   :dry-run             (contains? (set args) "--dry-run")
-   :input/max-commits   (System/getenv "INPUT_MAX_COMMITS")
-   })
+   :dry-run             (contains? (set args) "--dry-run")})
 
 ;; -- Version Bumping Logic  ---------------------------------------------------
 (defn fetch-related-data [context]
@@ -91,8 +89,9 @@
     "Skipping release. Reason: related PR has label norelease"))
 
 ;; Note: at 500, I suspect this list will be unproductive to view
-(defn max-commits-to-summarize [max-commits]
-  max-commits)
+(def max-commits-to-summarize
+  "This is the maximum number of commits to summarize."
+  5)
 
 (defn generate-new-release-data [context related-data]
   (let [bump-version-scheme (bump-version-scheme context related-data)
@@ -101,7 +100,7 @@
         base-commit         (get-in related-data [:latest-release :target_commitish])
 
         summary-since-last-release (->> (github/list-commits-to-base context base-commit)
-                                        (take (max-commits-to-summarize (Integer. (:input/max-commits context))))
+                                        (take max-commits-to-summarize)
                                         (map github/commit-summary)
                                         (str/join "\n"))]
     {:tag_name         (str (:input/tag-prefix context) next-version)
